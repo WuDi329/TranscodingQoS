@@ -6,7 +6,7 @@ class AudioQualityAnalyzer(ABC):
         其中包含了抽象方法analyze和showResult。
     """
     @abstractmethod
-    def extractAudio(self, origin_video, transcoded_video):
+    def _extract_audio(self, origin_video, transcoded_video):
         """
             读取视频路径，执行ffmpeg命令，提取视频的音频。
 
@@ -36,15 +36,15 @@ class AudioQualityAnalyzer(ABC):
         """
         pass
 
-    def showResult(self, output_file):
-        """
-            针对每个音频质量分析结果，提取音频质量数据，并且输出。
+    # def showResult(self, output_file):
+    #     """
+    #         针对每个音频质量分析结果，提取音频质量数据，并且输出。
 
-            Args:
-                output_file (str): 音频质量分析结果路径.
+    #         Args:
+    #             output_file (str): 音频质量分析结果路径.
 
-            Returns:
-                Null
+    #         Returns:
+    #             Null
 
-        """
-        pass
+    #     """
+    #     pass
