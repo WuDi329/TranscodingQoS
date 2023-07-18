@@ -35,7 +35,8 @@ class KeyFrameExtractor:
                 transcoded_key_frame (str): 转码视频关键帧路径.
         """
         key_time = self._get_key_time()
-        self._get_middle_time(key_time)
+        middle_time = self._get_middle_time(key_time)
+        self._cut_gop(middle_time)
         self.get_frame_number(key_time)
         # key_frame = self._get_key_frame(origin_video, key_time)
         # return key_frame
@@ -96,6 +97,50 @@ class KeyFrameExtractor:
         f.close()
 
         return self.origin_video.split(".")[0]+"-keytime.txt"
+    
+    def _cut_gop(self, middle_time):
+        """
+            根据视频关键帧信息，截取3帧作为短视频输出到子文件夹中。
+
+            Returns:
+                Null
+        """
+        print(middle_time)
+        dir_path = os.path.dirname(middle_time)
+        os.makedirs(os.path.join(dir_path, "target"), exist_ok=True)
+        os.makedirs(os.path.join(dir_path, "source"), exist_ok=True)
+        os.makedirs(os.path.join(dir_path, "vmaf"), exist_ok=True)
+
+        source_dir = os.path.join(dir_path, "source")
+        target_dir = os.path.join(dir_path, "target")
+        vmaf_dir = os.path.join(dir_path, "vmaf")
+
+        play_time = round(1 / self.rate * 3, 3)
+
+
+        data = []
+        with open (middle_time, "r") as f:
+            lines = f.readlines()
+            data = list(map(float, lines[0].split()))
+        f.close()
+
+        commands = []
+        for idx, begin in enumerate(data):
+                command = f"ffmpeg -ss {begin} -i {self.origin_video} -t {play_time} -map 0:0 -c:0 copy -map_metadata 0 -default_mode infer_no_subs -ignore_unknown -f mp4 -y {source_dir}/{idx}.mp4"
+                commands.append(command)
+                # print("当前执行指令1：{}".format(command))
+                # subprocess.run(command, shell=True)
+                command = f"ffmpeg -ss {begin} -i {self.transcoded_video} -t {play_time} -map 0:0 -c:0 copy -map_metadata 0 -default_mode infer_no_subs -ignore_unknown -f mp4 -y {target_dir}/{idx}.mp4"
+                commands.append(command)
+                # print("当前执行指令2：{}".format(command))
+                # subprocess.run(command, shell=True)
+        processes = []
+        for command in commands:
+            process = subprocess.Popen(command, shell=True)
+            processes.append(process)
+
+        for process in processes:
+            process.wait()
 
 
     def get_frame_number(self, key_time):
