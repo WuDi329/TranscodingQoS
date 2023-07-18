@@ -4,6 +4,7 @@ import os
 import subprocess
 import concurrent.futures
 import time
+import re
 
 class VMAFAnalyzer(VideoQualityAnalyzer):
     def analyze(self, origin_video, transcoded_video):
@@ -34,6 +35,15 @@ class VMAFAnalyzer(VideoQualityAnalyzer):
         command = 'ffmpeg -i "{}" -i "{}" -lavfi "[0:v][1:v]libvmaf=psnr=1:n_threads=8:log_path={}" -f null -'.format(transcoded_video, origin_video, vmaf_path)
         print("当前执行指令：{}".format(command))
         subprocess.run(command, shell=True)
+
+    def _calculate_final_vmaf(self, scores, numbers):
+        # 计算分数加权平均值
+        weighted_sum = 0
+        total_weight = sum(numbers)
+        for score, weight in zip(scores, numbers):
+            weighted_sum += score * weight
+        weighted_average = "{:.6f}".format(weighted_sum / total_weight)
+        return weighted_average
     
     def key_frame_vmaf(self, origin_video, transcoded_video):
         """
@@ -49,7 +59,7 @@ class VMAFAnalyzer(VideoQualityAnalyzer):
 
         """
         key_extractor = KeyFrameExtractor(origin_video, transcoded_video)
-        out_dir = key_extractor.extractFrame()
+        out_dir, key_time = key_extractor.extractFrame()
         source_dir = os.path.join(out_dir, "source")
         target_dir = os.path.join(out_dir, "target")
         vmaf_dir = os.path.join(out_dir, "vmaf")
@@ -64,6 +74,26 @@ class VMAFAnalyzer(VideoQualityAnalyzer):
                 future.result()
         executor.shutdown()
 
+        vmaf_slip_list = []
+        count_list = []
+        start_time = time.time()
+        for vmaf_txt in sorted(os.listdir(vmaf_dir)):
+            vmaf_txt_path = os.path.join(vmaf_dir, vmaf_txt)
+            # 可以用shell写，也可以用python写，分别对比一下花费的时间
+            # 这里先使用shell实现
+            with open(vmaf_txt_path, "r") as f:
+                lines = f.readlines()
+                # 从vmaf的txt文件中提取vmaf分数
+                vmaf_str = lines[5].split()[14]
+                m = re.search(r'\d+(\.\d+)?', vmaf_str)
+                vmaf = float(m.group(0))
+                vmaf_slip_list.append(vmaf)
+            f.close()
+        # 获取每个slip的vmaf分数后，只需要获得对应的slip的帧数即可
+        count_list = key_extractor.get_frame_number(key_time)
+        print(count_list)
+        result = self._calculate_final_vmaf(vmaf_slip_list, count_list)
+        print("VMAF分析结果：{}".format(result))
         
 
 

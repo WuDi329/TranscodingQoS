@@ -38,7 +38,7 @@ class KeyFrameExtractor:
         middle_time = self._get_middle_time(key_time)
         self._cut_gop(middle_time)
         self.get_frame_number(key_time)
-        return os.path.dirname(self.origin_video)
+        return os.path.dirname(self.origin_video), key_time
         # key_frame = self._get_key_frame(origin_video, key_time)
         # return key_frame
 
