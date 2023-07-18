@@ -10,7 +10,8 @@ class TestVMAFAnalyzer(unittest.TestCase):
     def test_get_ssim(self):
         origin_video = "/home/wudi/desktop/measureQuality/tests/rabbit.mp4"
         transcoded_video = "/home/wudi/desktop/measureQuality/tests/rabbit-265.mp4"
-        self.vmaf_analyzer.analyze(origin_video, transcoded_video)
+        self.vmaf_analyzer.key_frame_vmaf(origin_video, transcoded_video)
+        # self.vmaf_analyzer.analyze(origin_video, transcoded_video)
 
 if __name__ == "__main__":
 
