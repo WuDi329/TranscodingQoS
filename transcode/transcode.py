@@ -4,7 +4,7 @@ import json
 from .task import Task
 from .video import Video
 from .videotask import VideoTask
-from ..enums import Resolution, VideoCodec, Bitrate, AudioCodec
+from enums import Resolution, VideoCodec, Bitrate, AudioCodec
 
 def read_video_info(video_path: str):
     """
@@ -44,6 +44,7 @@ def extract_video_message(video_info: dict):
     width = video_info["streams"][0]["width"]
     height = video_info["streams"][0]["height"]
     video_codec = video_info["streams"][0]["codec_name"]
+    bitrate = video_info["streams"][0]["bit_rate"]
     framerate = video_info["streams"][0]["r_frame_rate"]
     duration = video_info["streams"][0]["duration"]
     audio_codec=video_info['streams'][1]['codec_name'] if len(video_info['streams']) > 1 else 'none'
@@ -58,6 +59,8 @@ def extract_video_message(video_info: dict):
     else:
         # 暂时不支持其他分辨率的情况
         resolution = "undefined"
+
+    print(resolution)
     
     # 暂时只考虑hevc和h264
     video_codec = VideoCodec.H264 if video_codec == "h264" else VideoCodec.H265
@@ -65,7 +68,8 @@ def extract_video_message(video_info: dict):
     audio_codec = AudioCodec.NONE if audio_codec == "none" else AudioCodec.AAC
 
 
-    video = Video(resolution, video_codec, framerate, duration, audio_codec)
+    video = Video(resolution, video_codec, bitrate, framerate, duration, audio_codec)
+    print(video)
     return video
 
 def transcode(video_path: str, task: Task):
@@ -83,6 +87,7 @@ def transcode(video_path: str, task: Task):
     # video = Video(video_info["streams"][0]["r_frame_rate"], video_info["streams"][0]["duration"])
 
 def generate_videotask(video: Video, task: Task):
+    # 这里缺少数据库实例化的过程
     return VideoTask(video, task)
 
 

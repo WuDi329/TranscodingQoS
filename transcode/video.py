@@ -1,4 +1,4 @@
-from ..enums import Resolution, VideoCodec, AudioCodec
+from enums import Resolution, VideoCodec, AudioCodec
 import uuid
 
 
@@ -7,6 +7,8 @@ class Video:
         """
             创建一个video对象.
         """
+        if not isinstance(resolution, Resolution):
+            raise ValueError("当前不支持该分辨率")
         self._vid = str(uuid.uuid1())
         self._resolution = resolution
         self._videocodec = videocodec
@@ -16,6 +18,10 @@ class Video:
         self._duration = duration
         self._audiocodec = audiocodec
         
+    @property
+    def vid(self):
+        return self._vid
+
     @property
     def resolution(self):
         return self._resolution

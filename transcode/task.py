@@ -1,6 +1,6 @@
 import sys
 sys.path.append("/home/wudi/desktop/measureQuality/enums/")
-from ..enums import Resolution, VideoCodec, Bitrate
+from enums import Resolution, VideoCodec, Bitrate
 
 
 class Task:
