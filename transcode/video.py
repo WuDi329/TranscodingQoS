@@ -3,12 +3,14 @@ import uuid
 
 
 class Video:
-    def __init__(self, resolution: Resolution, videocodec: VideoCodec, bitrate, framerate, duration, audiocodec: AudioCodec) -> None:
+    def __init__(self, path: str, output_path: str, resolution: Resolution, videocodec: VideoCodec, bitrate, framerate, duration, audiocodec: AudioCodec) -> None:
         """
             创建一个video对象.
         """
         if not isinstance(resolution, Resolution):
             raise ValueError("当前不支持该分辨率")
+        self._path = path
+        self._outputpath = output_path
         self._vid = str(uuid.uuid1())
         self._resolution = resolution
         self._videocodec = videocodec
@@ -25,6 +27,14 @@ class Video:
     @property
     def resolution(self):
         return self._resolution
+    
+    @property
+    def path(self):
+        return self._path
+    
+    @property
+    def outputpath(self):
+        return self._outputpath
 
     @resolution.setter
     def resolution(self, value):
