@@ -17,7 +17,7 @@ class VideoTask:
 
 
         """
-        self.taskid = str(uuid.uuid1())
+        self._taskid = str(uuid.uuid1())
         self._vid = video.vid
         self._duration = video.duration
         self._origincodec = video.videocodec
@@ -26,5 +26,21 @@ class VideoTask:
         self._outputresolution = task.resolution
         self._bitrate = task.bitrate
         self._framerate = video.framerate
+
+    @property
+    def vid(self):
+        return self._vid
+    
+    @property
+    def taskid(self):
+        return self._taskid
+    
+    @property
+    def outputcodec(self):
+        return self._outputcodec
+    
+    @property
+    def bitrate(self):
+        return self._bitrate
         
         

@@ -1,10 +1,13 @@
 import subprocess
+import os
+from .capabilities import get_nvenc_capability
 from . import config
 import json
 from .task import Task
 from .video import Video
 from .videotask import VideoTask
-from enums import Resolution, VideoCodec, Bitrate, AudioCodec
+from enums import Resolution, VideoCodec, Bitrate, AudioCodec, Accelerator
+import random
 
 def read_video_info(video_path: str):
     """
@@ -49,6 +52,9 @@ def extract_video_message(video_info: dict):
     duration = video_info["streams"][0]["duration"]
     audio_codec=video_info['streams'][1]['codec_name'] if len(video_info['streams']) > 1 else 'none'
 
+    print(width)
+    print(height)
+
     resolution = ""
     if width == 1920 and height == 1080:
         resolution = Resolution.FHD
@@ -70,6 +76,8 @@ def extract_video_message(video_info: dict):
 
     video = Video(resolution, video_codec, bitrate, framerate, duration, audio_codec)
     print(video)
+
+    # 这里同样缺少video实例化的过程
     return video
 
 def transcode(video_path: str, task: Task):
@@ -82,7 +90,8 @@ def transcode(video_path: str, task: Task):
 
     """
     video = read_video_info(video_path)
-    generate_videotask(video, task)
+    videotask = generate_videotask(video, task)
+    execute_transcode(videotask)
 
     # video = Video(video_info["streams"][0]["r_frame_rate"], video_info["streams"][0]["duration"])
 
@@ -90,6 +99,57 @@ def generate_videotask(video: Video, task: Task):
     # 这里缺少数据库实例化的过程
     return VideoTask(video, task)
 
+def read_capability():
+    """
+        读取capabilities.json，返回由转码能力组成的对象。
+
+        Returns:
+            capability (dict): 转码能力组成的对象.
+    """
+    parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(parent_path, "capabilities.json")
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            capability = json.load(f)
+        f.close()
+    else:
+        capability = get_nvenc_capability()
+    return capability
+
+def execute_transcode(videotask: VideoTask):
+
+    outputcodec = videotask.outputcodec
+
+
+    get_random_accelerator(outputcodec)
+    # 获取键为'h264'的所有值
+
+    # 打印所有值
+    # print(h264_values)
+    # print(outputcodec.value)
+
+
+def get_random_accelerator(videocodec: VideoCodec):
+    """
+        从capabilities.json中随机获取一个转码能力。
+
+        Returns:
+            accelerator (Accelerator): 转码能力.
+    """
+    # 
+    capability = read_capability()
+    capability = json.loads(capability)
+
+    accelerators = capability[videocodec.value]
+    config = random.choice(accelerators)
+    if config == 'software':
+        config = Accelerator.software
+    elif config == 'nvidia':
+        config =  Accelerator.nvidia
+    elif config == 'intel':
+        config =  Accelerator.intel
+    print(config)
+    return config
 
 
 

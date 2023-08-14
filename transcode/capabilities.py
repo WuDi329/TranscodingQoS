@@ -49,4 +49,4 @@ def get_nvenc_capability():
         json.dump(result, f)
     f.close()
 
-    return capabilities
+    return result

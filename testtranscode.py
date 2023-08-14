@@ -6,4 +6,4 @@ from transcode.task import Task
 
 task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA)
 
-transcode("/home/wudi/rabbit.mp4",task)
+transcode("/dataset/dataset/reference_videos/basketball_10sec_1920x1080_24.mp4",task)
