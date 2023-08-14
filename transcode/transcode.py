@@ -8,6 +8,8 @@ from .video import Video
 from .videotask import VideoTask
 from enums import Resolution, VideoCodec, Bitrate, AudioCodec, Accelerator
 import random
+from .config import get_config_value, parse_config_file
+import datetime
 
 def read_video_info(video_path: str):
     """
@@ -29,12 +31,12 @@ def read_video_info(video_path: str):
         video_info = json.load(f)
     f.close()
 
-    return extract_video_message(video_info)
+    return extract_video_message(video_info, video_path)
     
 
     
     # 这里需要额外连接数据库持久化？
-def extract_video_message(video_info: dict):
+def extract_video_message(video_info: dict, video_path: str):
     """
         从视频信息中提取视频相关信息，返回由视频相关信息组成的对象。
 
@@ -44,6 +46,7 @@ def extract_video_message(video_info: dict):
         Returns:
             video (Video): 视频相关信息组成的对象.
     """
+    outputpath = os.path.dirname(video_path)
     width = video_info["streams"][0]["width"]
     height = video_info["streams"][0]["height"]
     video_codec = video_info["streams"][0]["codec_name"]
@@ -74,7 +77,7 @@ def extract_video_message(video_info: dict):
     audio_codec = AudioCodec.NONE if audio_codec == "none" else AudioCodec.AAC
 
 
-    video = Video(resolution, video_codec, bitrate, framerate, duration, audio_codec)
+    video = Video(video_path, outputpath, resolution, video_codec, bitrate, framerate, duration, audio_codec)
     print(video)
 
     # 这里同样缺少video实例化的过程
@@ -116,17 +119,59 @@ def read_capability():
         capability = get_nvenc_capability()
     return capability
 
+def read_encode_ini():
+    """
+        读取encode.ini，返回由转码参数组成的对象。
+
+        Returns:
+            encode_lib (dict): 转码参数组成的对象.
+    """
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_path, "test.ini")
+
+    try:
+        encode_lib = parse_config_file(file_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"文件{file_path}不存在")
+
+    return encode_lib
+
+# 具体的accelerator目前设定为随机
 def execute_transcode(videotask: VideoTask):
 
-    outputcodec = videotask.outputcodec
+    task_outputcodec = videotask.outputcodec
+    task_resolution = videotask.resolution
+    task_bitrate = videotask.bitrate
+    accelerator = get_random_accelerator(task_outputcodec)
 
+    # 访问test.ini获取转码参数
+    encode_lib = read_encode_ini()
+    # 获取具体编码库
+    codec = get_config_value(encode_lib, task_outputcodec.value, accelerator.value)
+    # 获取具体比特率
+    bitrate = get_config_value(encode_lib, task_resolution.value, task_bitrate.value)
 
-    get_random_accelerator(outputcodec)
-    # 获取键为'h264'的所有值
+    path = videotask.path
 
-    # 打印所有值
-    # print(h264_values)
-    # print(outputcodec.value)
+    # 获取文件名和后缀
+    filename, extension = os.path.splitext(os.path.basename(path))
+
+    # 获取当前时间戳
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}{extension}")
+
+    print("当前输出路径")
+    print(outputpath)
+
+    # 以下部分开始拼凑ffmpeg指令
+
+    command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
+    print("当前执行指令")
+    print(command)
+    subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    print("转码完成")
+
 
 
 def get_random_accelerator(videocodec: VideoCodec):
