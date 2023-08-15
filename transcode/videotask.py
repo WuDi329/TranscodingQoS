@@ -26,6 +26,7 @@ class VideoTask:
         self._outputcodec = task.videocodec
         self._originresolution = video.resolution
         self._outputresolution = task.resolution
+        self._audiocodec = video.audiocodec
         self._bitrate = task.bitrate
         self._framerate = video.framerate
 
@@ -56,5 +57,9 @@ class VideoTask:
     @property
     def resolution(self):
         return self._outputresolution
+    
+    @property
+    def audiocodec(self):
+        return self._audiocodec
         
         
