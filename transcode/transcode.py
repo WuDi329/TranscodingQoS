@@ -10,6 +10,7 @@ from enums import Resolution, VideoCodec, Bitrate, AudioCodec, Accelerator
 import random
 from .config import get_config_value, parse_config_file
 import datetime
+from db.mysqlhelper import MySQLHelper
 
 def read_video_info(video_path: str):
     """
@@ -78,9 +79,13 @@ def extract_video_message(video_info: dict, video_path: str):
 
 
     video = Video(video_path, outputpath, resolution, video_codec, bitrate, framerate, duration, audio_codec)
-    print(video)
 
     # 这里同样缺少video实例化的过程
+    helper = MySQLHelper()
+    helper.connect()
+    helper.insert_video(video)
+    print("Inserted video record with ID: ", video.vid)
+    helper.disconnect()
     return video
 
 def transcode(video_path: str, task: Task):
@@ -93,6 +98,7 @@ def transcode(video_path: str, task: Task):
 
     """
     video = read_video_info(video_path)
+    print(video.framerate)
     videotask = generate_videotask(video, task)
     execute_transcode(videotask)
 
@@ -100,7 +106,13 @@ def transcode(video_path: str, task: Task):
 
 def generate_videotask(video: Video, task: Task):
     # 这里缺少数据库实例化的过程
-    return VideoTask(video, task)
+    videotask = VideoTask(video, task)
+    helper = MySQLHelper()
+    helper.connect()
+    helper.insert_videotask(videotask)
+    print("Inserted taskid record with ID: ", videotask.taskid)
+    helper.disconnect()
+    return videotask
 
 def read_capability():
     """
@@ -140,7 +152,7 @@ def read_encode_ini():
 def execute_transcode(videotask: VideoTask):
 
     task_outputcodec = videotask.outputcodec
-    task_resolution = videotask.resolution
+    task_resolution = videotask.outputresolution
     task_bitrate = videotask.bitrate
     accelerator = get_random_accelerator(task_outputcodec)
 
