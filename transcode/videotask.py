@@ -55,11 +55,28 @@ class VideoTask:
         return self._bitrate
     
     @property
-    def resolution(self):
+    def audiocodec(self):
+        return self._audiocodec
+    
+    @property
+    def duration(self):
+        return self._duration
+    
+    @property
+    def origincodec(self):
+        return self._origincodec
+    
+    @property
+    def originresolution(self):
+        return self._originresolution
+    
+    @property
+    def outputresolution(self):
         return self._outputresolution
     
     @property
-    def audiocodec(self):
-        return self._audiocodec
+    def framerate(self):
+        return self._framerate
+    
         
         
