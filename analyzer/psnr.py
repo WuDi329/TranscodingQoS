@@ -7,7 +7,7 @@ class PSNRAnalyzer(VideoQualityAnalyzer):
     def analyze(self, origin_video, transcoded_video):
         # ...
         output_file = self._get_psnr(origin_video, transcoded_video)
-        self.showResult(output_file)
+        return self.showResult(output_file)
 
     def _get_psnr(self, origin_video, transcoded_video):
         """
@@ -36,15 +36,17 @@ class PSNRAnalyzer(VideoQualityAnalyzer):
                 output_file (str): 视频质量分析结果路径.
 
             Returns:
-                Null
+                result(str): PSNR分析结果
 
         """
+        result = ""
         with open(output_file, "r") as f:
             lines = f.readlines()
             last_line = lines[-1]
             elements = last_line.split()
-            fifth_element = elements[7]
-            print("PSNR分析结果：{}".format(fifth_element))
+            result = elements[7]
+            print("PSNR分析结果：{}".format(result))
             f.close()
+        return result
         # print("PSNR分析结果：")
 

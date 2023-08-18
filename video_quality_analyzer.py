@@ -16,7 +16,7 @@ class VideoQualityAnalyzer(ABC):
                 transcoded_video (str): 转码后视频的路径.
 
             Returns:
-                Null
+                Result (str): 视频质量分析结果.
 
         """
         pass

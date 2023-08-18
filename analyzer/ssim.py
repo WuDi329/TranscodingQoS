@@ -7,7 +7,8 @@ class SSIMAnalyzer(VideoQualityAnalyzer):
     def analyze(self, origin_video, transcoded_video):
         # ...
         output_file = self._get_ssim(origin_video, transcoded_video)
-        self.showResult(output_file)
+        result = self.showResult(output_file)
+        return result
 
     def _get_ssim(self, origin_video, transcoded_video):
         """
@@ -35,14 +36,16 @@ class SSIMAnalyzer(VideoQualityAnalyzer):
                 output_file (str): 视频质量分析结果路径.
 
             Returns:
-                Null
+                result(str): SSIM分析结果
 
         """
+        result = ""
         with open(output_file, "r") as f:
             lines = f.readlines()
             last_line = lines[-1]
             elements = last_line.split()
-            fifth_element = elements[10]
-            print("SSIM分析结果：{}".format(fifth_element))
+            result = elements[10]
+            print("SSIM分析结果：{}".format(result))
             f.close()
+        return result
 

@@ -31,7 +31,7 @@ class AudioQualityAnalyzer(ABC):
                 transcoded_video (str): 转码后音频的路径.
 
             Returns:
-                Null
+                result (str): 音频质量分析结果.
 
         """
         pass

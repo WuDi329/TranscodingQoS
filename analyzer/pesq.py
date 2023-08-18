@@ -33,7 +33,7 @@ class PESQAnalyzer(AudioQualityAnalyzer):
         # ...
         origin_audio, transcoded_audio = self._extract_audio(origin_video, transcoded_video)
         # output_file = self._get_pesq(origin_audio, transcoded_audio)
-        self._get_pesq(origin_audio, transcoded_audio)
+        return self._get_pesq(origin_audio, transcoded_audio)
         # self.showResult(output_file)
 
     def _get_pesq(self, origin_video, transcoded_video):
@@ -45,7 +45,7 @@ class PESQAnalyzer(AudioQualityAnalyzer):
                 transcoded_video (str): 转码后音频的路径.
 
             Returns:
-                output_file (str): 视频质量分析结果路径.
+                result (str): 音频质量分析结果.
 
         """
         # ...
@@ -53,7 +53,9 @@ class PESQAnalyzer(AudioQualityAnalyzer):
         rate, deg = wavfile.read(transcoded_video)
         # print('ref.shape')
         # print(ref.shape)
-        print('pesq分析结果为{}'.format(pesq(rate, ref, deg, 'wb')))
+        result = pesq(rate, ref, deg, 'wb')
+        print('pesq分析结果为{}'.format(result))
+        return result
 
 
         # command = "ffmpeg -i {} -i {} -lavfi \"ssim\" -f null - 2> {}".format(transcoded_video, origin_video, transcoded_video.split(".")[0]+"-ssim-result.txt")
