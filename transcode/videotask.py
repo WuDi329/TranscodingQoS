@@ -29,6 +29,7 @@ class VideoTask:
         self._audiocodec = video.audiocodec
         self._bitrate = task.bitrate
         self._framerate = video.framerate
+        self._mode = task.mode
 
     @property
     def vid(self):
@@ -77,6 +78,10 @@ class VideoTask:
     @property
     def framerate(self):
         return self._framerate
+    
+    @property
+    def mode(self):
+        return self._mode
     
         
         

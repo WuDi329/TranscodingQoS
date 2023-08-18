@@ -1,16 +1,17 @@
 import sys
 sys.path.append("/home/wudi/desktop/measureQuality/enums/")
-from enums import Resolution, VideoCodec, Bitrate
+from enums import Resolution, VideoCodec, Bitrate, Mode
 
 
 class Task:
-    def __init__(self, resolution: Resolution, videocodec: VideoCodec, bitrate: Bitrate) -> None:
+    def __init__(self, resolution: Resolution, videocodec: VideoCodec, bitrate: Bitrate, mode: Mode) -> None:
         """
             创建一个task对象.
         """
         self._resolution = resolution
         self._videocodec = videocodec
         self._bitrate = bitrate
+        self._mode = mode
 
     @property
     def resolution(self):
@@ -44,3 +45,7 @@ class Task:
             self._bitrate = value
         else:
             raise ValueError("Invalid bitrate value")
+        
+    @property
+    def mode(self):
+        return self._mode
