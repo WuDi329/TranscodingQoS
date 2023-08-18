@@ -11,6 +11,7 @@ import random
 from .config import get_config_value, parse_config_file
 import datetime
 from db.mysqlhelper import MySQLHelper
+from .measure import QoSAnalyzer
 
 def read_video_info(video_path: str):
     """
@@ -23,7 +24,9 @@ def read_video_info(video_path: str):
             rate (float): 视频的帧率.
             length (float): 视频的长度.
     """
-    cmd = "ffprobe -loglevel error -print_format json -show_streams {} > test.json".format(video_path)
+    current_path = os.path.abspath(__file__)
+    current_path = os.path.abspath(__file__)
+    cmd = "ffprobe -loglevel error -print_format json -show_streams {} > test.json".format(video_path, os.path.join(current_path, "test.json"))
     print("当前执行读取视频信息指令：{}".format(cmd))
     subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 
@@ -181,8 +184,11 @@ def execute_transcode(videotask: VideoTask):
     command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
     print("当前执行指令")
     print(command)
-    subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-    print("转码完成")
+    # 创建QoSAnalyzer对象
+    analyzer = QoSAnalyzer(videotask, outputpath)
+    with analyzer.measure():
+        subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+        print("转码完成")
 
 
 
