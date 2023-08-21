@@ -1,6 +1,8 @@
 import mysql.connector
 from transcode.video import Video
 from transcode.videotask import VideoTask
+from transcode.device import Device
+import uuid
 
 class MySQLHelper:
     def __init__(self):
@@ -45,3 +47,23 @@ class MySQLHelper:
         query = "INSERT INTO videotask (taskid, path, outputpath, vid, duration, origincodec, outputcodec, originresolution, outputresolution, audiocodec, bitrate, framerate, mode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         value = (videotask.taskid, videotask.path, videotask.outputpath, videotask.vid, videotask.duration, videotask.origincodec.value, videotask.outputcodec.value, videotask.originresolution.value, videotask.outputresolution.value, videotask.audiocodec.value, videotask.bitrate.value, videotask.framerate, videotask.mode.value)
         self.execute_insert(query, value)
+
+    def insert_device(self, device: Device):
+        query = "INSERT INTO device (mac) VALUES (%s, %s)"
+        value = (device.mac)
+        self.execute_insert(query, value)
+    
+    def contract_task(self, taskid, mac):
+        query = "INSERT INTO contracttast (id, taskid, devicemac) VALUES (%s, %s, %s) "
+        value = (str(uuid.uuid1()), taskid, mac)
+        self.execute_insert(query, value)
+    
+    def finish_contract_task(self, id):
+        query = "UPDATE contracttask SET status = 'finished' WHERE id = %s"
+        value = (id)
+        self.execute_insert(query, value)
+
+    def query_device_task(self, mac):
+        query = "SELECT taskid FROM contracttask WHERE devicemac = %s"
+        value = (mac,)
+        return self.execute_query(query, value)

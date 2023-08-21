@@ -3,13 +3,13 @@ import socket
 import fcntl
 import struct
 
-class Node:
+class Device(object):
     def __init__(self, nodeid, ip, port):
         self._macaddress = self.get_device_uuid()
 
     @property
     def macaddress(self):
-        return self._macaddress
+        return self._macaddress 
 
     def get_mac_address(self):
         """
