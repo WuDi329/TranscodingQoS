@@ -4,7 +4,7 @@ import fcntl
 import struct
 
 class Device(object):
-    def __init__(self, nodeid, ip, port):
+    def __init__(self,):
         self._macaddress = self.get_device_uuid()
 
     @property

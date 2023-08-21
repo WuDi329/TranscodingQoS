@@ -49,9 +49,9 @@ class MySQLHelper:
         self.execute_insert(query, value)
 
     def insert_device(self, device: Device):
-        query = "INSERT INTO device (mac) VALUES (%s, %s)"
-        value = (device.mac)
-        self.execute_insert(query, value)
+        query = "INSERT INTO device (mac) VALUES (%s)"
+        value = device.macaddress
+        self.execute_insert(query, (value, ))
     
     def contract_task(self, taskid, mac):
         query = "INSERT INTO contracttast (id, taskid, devicemac) VALUES (%s, %s, %s) "
