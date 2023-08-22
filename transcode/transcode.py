@@ -91,7 +91,8 @@ def extract_video_message(video_info: dict, video_path: str):
     helper.disconnect()
     return video
 
-def transcode(video_path: str, task: Task):
+# 修改函数名为upload
+def upload(video_path: str, task: Task):
     """
         
 
@@ -103,7 +104,28 @@ def transcode(video_path: str, task: Task):
     video = read_video_info(video_path)
     print(video.framerate)
     videotask = generate_videotask(video, task)
-    execute_transcode(videotask)
+    # 这里修改了代码逻辑，将具体的代码执行和生成任务分开
+    # execute_transcode(videotask)
+    dispatch_task(videotask)
+    
+
+# 这里将会随机将task分配给一个节点
+def dispatch_task(videotask: VideoTask):
+    """
+        分配任务，将任务分配给一个节点。
+
+        Args:
+            videotask (VideoTask): 视频任务.
+    """
+    # 这里应当随机选择一个节点，但是在demo阶段只有一个节点，所以直接执行
+    helper = MySQLHelper()
+    helper.connect()
+    mac = helper.query_first_device()[0][0]
+    print(mac)
+    helper.contract_task(videotask.taskid, mac)
+    result = helper.search_all_videotask(mac)
+    print(result)
+    helper.disconnect()
 
     # video = Video(video_info["streams"][0]["r_frame_rate"], video_info["streams"][0]["duration"])
 

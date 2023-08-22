@@ -1,4 +1,4 @@
-from transcode.transcode import read_video_info, transcode
+from transcode.transcode import read_video_info, upload
 from enums import Resolution, VideoCodec, Bitrate, Mode
 from transcode.task import Task
 
@@ -6,4 +6,4 @@ from transcode.task import Task
 
 task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Normal)
 
-transcode("/dataset/dataset/reference_videos/basketball_10sec_1920x1080_24.mp4",task)
+upload("/dataset/dataset/reference_videos/basketball_10sec_1920x1080_24.mp4",task)
