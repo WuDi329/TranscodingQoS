@@ -123,7 +123,7 @@ def dispatch_task(videotask: VideoTask):
     mac = helper.query_first_device()[0][0]
     print(mac)
     helper.contract_task(videotask.taskid, mac)
-    result = helper.search_all_videotask(mac)
+    result = helper.search_mac_unfinished_videotasks(mac)
     print(result)
     helper.disconnect()
 

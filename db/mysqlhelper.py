@@ -66,7 +66,7 @@ class MySQLHelper:
         value = (id)
         self.execute_insert(query, value)
     
-    def search_all_videotask(self, mac):
+    def search_mac_unfinished_videotasks(self, mac):
         """
             根据mac地址查询所有状态为pending的任务。
         """
