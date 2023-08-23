@@ -1,9 +1,10 @@
 import uuid
 from .task import Task
 from .video import Video
+# from db.mysqlhelper import MySQLHelper
 
 class VideoTask:
-    def __init__(self, video: Video, task: Task):
+    def __init__(self, video: Video, task: Task, taskid=None):
         """
             创建一个VideoTask对象.
 
@@ -17,7 +18,11 @@ class VideoTask:
 
 
         """
-        self._taskid = str(uuid.uuid1())
+        if taskid != None:
+            self._taskid = taskid
+        else:
+            self._taskid = str(uuid.uuid1())
+        print("taskid: ", self._taskid)
         self._path = video.path
         self._outputpath = video.outputpath
         self._vid = video.vid
@@ -30,6 +35,11 @@ class VideoTask:
         self._bitrate = task.bitrate
         self._framerate = video.framerate
         self._mode = task.mode
+
+    @classmethod
+    def create_task_from_db(result):
+        print(result)
+        # video = Video(result[0][0], result[0][1], result[0][2], result[0][3], result[0][4], result[0][5], result[0][6], result[0][7])
 
     @property
     def vid(self):

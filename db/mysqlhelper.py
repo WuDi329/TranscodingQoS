@@ -30,7 +30,12 @@ class MySQLHelper:
 
     def execute_query(self, query):
         self.cursor.execute(query)
+        # self.cnx.commit()
         return self.cursor.fetchall()
+    
+    def execute_update(self, query, values):
+        self.cursor.execute(query, values)
+        self.cnx.commit()
 
     def execute_insert(self, query, values):
         self.cursor.execute(query, values)
@@ -77,3 +82,25 @@ class MySQLHelper:
             WHERE c.devicemac = '{}' AND c.status = 'pending'
         """.format(mac)
         return self.execute_query(query)
+    
+    def search_specific_videotask(self, taskid):
+        """
+            根据taskid查询任务。
+        """
+        query = """
+            SELECT  vt.taskid, v.path, v.outputpath, v.resolution, v.videocodec, v.bitrate, v.framerate, v.duration, v.audiocodec, vt.originresolution, vt.outputcodec, vt.bitrate, vt.mode
+            FROM videotask vt
+            JOIN video v ON v.vid = vt.vid
+            WHERE vt.taskid = '{}'
+        """.format(taskid)
+        return self.execute_query(query)
+    
+    def update_mac_task(self, taskid, mac):
+        """
+            更新mac地址。
+        """
+        query = """
+            UPDATE contracttask SET status = %s WHERE taskid = %s AND devicemac = %s
+        """
+        values = ('finished', taskid, mac)
+        self.execute_update(query, values)

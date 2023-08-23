@@ -6,7 +6,7 @@ import json
 from .task import Task
 from .video import Video
 from .videotask import VideoTask
-from enums import Resolution, VideoCodec, Bitrate, AudioCodec, Accelerator
+from enums import Resolution, VideoCodec, Bitrate, AudioCodec, Accelerator, Mode
 import random
 from .config import get_config_value, parse_config_file
 import datetime
@@ -174,7 +174,7 @@ def read_encode_ini():
     return encode_lib
 
 # 具体的accelerator目前设定为随机
-def execute_transcode(videotask: VideoTask):
+def execute_transcode(videotask: VideoTask, mac):
 
     task_outputcodec = videotask.outputcodec
     task_resolution = videotask.outputresolution
@@ -211,6 +211,12 @@ def execute_transcode(videotask: VideoTask):
     with analyzer.measure():
         subprocess.run(command, shell=True, stdout=subprocess.PIPE)
         print("转码完成")
+    
+    # 这里需要更改数据库任务结果
+    helper = MySQLHelper()
+    helper.connect()
+    helper.update_mac_task(videotask.taskid, mac)
+    helper.disconnect()
 
 
 
@@ -236,7 +242,59 @@ def get_random_accelerator(videocodec: VideoCodec):
     print(config)
     return config
 
+def create_task_from_db(taskid):
+    helper = MySQLHelper()
+    helper.connect()
+    result = helper.search_specific_videotask(taskid)
+    print(result)
+    helper.disconnect()
+    if result[0][3] == "1920x1080":
+        resolution = Resolution.FHD
+    elif result[0][3] == "1280x720":
+        resolution = Resolution.HD
+    elif result[0][3] == "640x480":
+        resolution = Resolution.SD
+    else:
+        resolution = "undefined"
 
+    if result[0][10] == "h264":
+        videocodec = VideoCodec.H264
+    elif result[0][10] == "h265":
+        videocodec = VideoCodec.H265
+    else:
+        videocodec = "undefined"
+    
+    if result[0][11] == "ultra":
+        bitrate = Bitrate.ULTRA
+    elif result[0][11] == "high":
+        bitrate = Bitrate.HIGH
+    elif result[0][11] == "medium":
+        bitrate = Bitrate.MEDIUM
+    elif result[0][11] == "low":
+        bitrate = Bitrate.LOW
+    else:
+        bitrate = "undefined"
+
+    if result[0][12] == 'normal':
+        mode = Mode.Normal
+    elif result[0][12] == 'latency-critical':
+        mode = Mode.Latency
+    elif result[0][12] == 'live':
+        mode = Mode.Live
+    else:
+        mode = "undefined"
+
+    if result[0][8] == 'aac':
+        audiocodec = AudioCodec.AAC
+    elif result[0][8] == 'none':
+        audiocodec = AudioCodec.NONE
+    else:
+        audiocodec = "undefined"
+
+    video = Video(result[0][1], result[0][2], resolution, videocodec, result[0][5], result[0][6], result[0][7], audiocodec)
+    task = Task(resolution, videocodec, bitrate, mode)
+    videotask = VideoTask(video, task, result[0][0])
+    return videotask
 
 
 # def generate_video_task(video_path: str, task: task):

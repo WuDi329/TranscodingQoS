@@ -11,9 +11,11 @@ from prettytable import PrettyTable
 # sys.path.append("/home/wudi/desktop/measureQuality/client/")
 # sys.path.append("/home/wudi/desktop/measureQuality/")
 # from transcode.transcode import read_video_info, upload
+from transcode.transcode import create_task_from_db, execute_transcode
 from enums import Resolution, VideoCodec, Bitrate, Mode
 from transcode.task import Task
 from transcode.device import Device
+from transcode.videotask import VideoTask
 
 # 定义登录信息
 login_info = {}
@@ -44,18 +46,25 @@ def query():
     helper.connect()
     results = helper.search_mac_unfinished_videotasks(login_info["mac"])
     table = ComplexTaskTable.table
+    table.clear_rows()
     for row in results:
         table.add_row(row)
     helper.disconnect()
     print(table)
 
 
-def transcode(a, b):
+
+def transcode(taskid):
     """
         转码。
 
     """
     print("Transcoding...")
+    vt = create_task_from_db(taskid)
+    execute_transcode(vt, login_info["mac"])
+    # print(result)
+    # VideoTask.create_task_from_db(taskid)
+    
 
 def listen_task() -> None:
     """
@@ -142,8 +151,8 @@ def main():
         elif command == "query":
             query()
         elif command.startswith("transcode"):
-            _, video_path, task_name = command.split(" ")
-            transcode(video_path, task_name)
+            _, taskid = command.split(" ")
+            transcode(taskid)
         else:
             print("Invalid command.")
 
