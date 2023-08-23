@@ -5,17 +5,26 @@ import time
 import threading
 import pika
 import sys
+from db.mysqlhelper import MySQLHelper
+from db.tablehelper import ComplexTaskTable
+from prettytable import PrettyTable
 # sys.path.append("/home/wudi/desktop/measureQuality/client/")
 # sys.path.append("/home/wudi/desktop/measureQuality/")
 # from transcode.transcode import read_video_info, upload
 from enums import Resolution, VideoCodec, Bitrate, Mode
 from transcode.task import Task
+from transcode.device import Device
+
+# 定义登录信息
+login_info = {}
 
 def login() -> None:
     """
         登录，获取token。
 
     """
+    device = Device()
+    login_info["mac"] = device.macaddress
     print("Login successfully.")
 
 def logout() -> None:
@@ -31,6 +40,15 @@ def query():
 
     """
     print("Querying task information...")
+    helper = MySQLHelper()
+    helper.connect()
+    results = helper.search_mac_unfinished_videotasks(login_info["mac"])
+    table = ComplexTaskTable.table
+    for row in results:
+        table.add_row(row)
+    helper.disconnect()
+    print(table)
+
 
 def transcode(a, b):
     """
@@ -115,19 +133,19 @@ def main():
     # 执行命令
     if hasattr(args, "func"):
         args.func()
-    else:
+    # else:
         # 如果没有外界输入，程序一直在线
-        while True:
-            command = input("Enter command: ")
-            if command == "logout":
-                break
-            elif command == "query":
-                query()
-            elif command.startswith("transcode"):
-                _, video_path, task_name = command.split(" ")
-                transcode(video_path, task_name)
-            else:
-                print("Invalid command.")
+    while True:
+        command = input("Enter command: ")
+        if command == "logout":
+            break
+        elif command == "query":
+            query()
+        elif command.startswith("transcode"):
+            _, video_path, task_name = command.split(" ")
+            transcode(video_path, task_name)
+        else:
+            print("Invalid command.")
 
 if __name__ == "__main__":
     main()

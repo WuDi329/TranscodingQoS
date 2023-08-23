@@ -70,5 +70,10 @@ class MySQLHelper:
         """
             根据mac地址查询所有状态为pending的任务。
         """
-        query = "SELECT taskid FROM contracttask WHERE devicemac = '{}' AND status = 'pending'".format(mac)
+        query = """
+            SELECT  c.id, c.taskid, v.duration, v.origincodec, v.outputcodec, v.originresolution, v.audiocodec, v.bitrate, v.framerate, v.mode
+            FROM contracttask c
+            JOIN videotask v ON c.taskid = v.taskid
+            WHERE c.devicemac = '{}' AND c.status = 'pending'
+        """.format(mac)
         return self.execute_query(query)
