@@ -99,6 +99,8 @@ def handle_task(message: Message) -> None:
     # transcode(video_path, task)
 
     print("Received task.")
+    # time.sleep(1)
+
     # 使用 ch.basic_ack() 方法确认消息已经被处理完毕，并将消息从队列中删除。
     # delivery_tag 参数代表了消息的传递标签，它是一个整数值，用于唯一标识消息。
     # RabbitMQ 会在消息被发送到消费者之前为每个消息分配一个唯一的 delivery_tag，

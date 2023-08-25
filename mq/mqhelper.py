@@ -72,16 +72,25 @@ class MQUtil:
             从指定的队列中接收消息，并调用指定的回调函数处理消息.
         """
         try:
+
+            await self.channel.channel.basic_qos(prefetch_count=1)
             # 声明队列
             queue = await self.declare_queue(queue_name)
 
             # 注册回调函数
-            await queue.consume(callback)
+            await self.channel.channel.basic_consume(consumer_callback=callback, queue=queue_name, no_ack=True)
+            
 
             # 开始消费
             print("Start consuming messages...")
+
+            # queue.start_consuming()
             while True:
+                
                 await asyncio.sleep(1)
+                # 在客户端重新登录时，确认之前接收过的消息
+                
+
         except Exception as e:
             print(f"Failed to receive message from queue {queue_name}: {e}")
             raise
