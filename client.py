@@ -5,6 +5,10 @@ import time
 import threading
 import pika
 import sys
+from mq.mqhelper import MQUtil
+from mq.message import Message
+import threading
+import asyncio
 from db.mysqlhelper import MySQLHelper
 from db.tablehelper import ComplexTaskTable
 from prettytable import PrettyTable
@@ -66,25 +70,19 @@ def transcode(taskid):
     # VideoTask.create_task_from_db(taskid)
     
 
-def listen_task() -> None:
+async def listen_task() -> None:
     """
         监听任务队列，如果有任务则调用callback执行任务。
 
     """
     print("Listening task queue.")
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    # 声明队列，名为task_queue，并且设置持久化，确保队列中的消息在 RabbitMQ 服务器重启后不会丢失。
-    channel.queue_declare(queue='task_queue', durable=True)
-    # 使用 channel.basic_qos() 方法设置了每次只处理一个消息，以确保公平分配任务。
-    channel.basic_qos(prefetch_count=1)
-    # 使用 channel.basic_consume() 方法订阅了队列，当有消息时就调用 callback 函数处理消息。
-    channel.basic_consume(queue='task_queue', on_message_callback=handle_task)
-    channel.start_consuming()
+    mqutil = MQUtil()
+    await mqutil.connect()
+    await mqutil.receive_message("task_queue", handle_task)
 
 # def handle_task(ch, method, properties, body) -> None: 
 
-def handle_task(ch, method, properties, body) -> None:
+def handle_task(message: Message) -> None:
 
     """
         ch RabbitMQ channel 对象
@@ -93,11 +91,11 @@ def handle_task(ch, method, properties, body) -> None:
         body 消息内容
     """
     # 使用 body.decode() 方法将消息内容解码为字符串
-    message = body.decode()
+    # message = body.decode()
     # 任务格式：taskid,video_path,task_name
     # 使用 split() 方法将字符串按照逗号分隔为三个部分，分别是任务 ID、视频文件路径和任务名称。
-    taskid, video_path, task_name = message.split(",")
-    task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Normal)
+    # taskid, video_path, task_name = message.split(",")
+    # task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Normal)
     # transcode(video_path, task)
 
     print("Received task.")
@@ -105,9 +103,12 @@ def handle_task(ch, method, properties, body) -> None:
     # delivery_tag 参数代表了消息的传递标签，它是一个整数值，用于唯一标识消息。
     # RabbitMQ 会在消息被发送到消费者之前为每个消息分配一个唯一的 delivery_tag，
     # 消费者在处理完消息后需要调用 ch.basic_ack() 方法并传递相应的 delivery_tag，以便 RabbitMQ 可以将消息从队列中删除。
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-    print("Handling task.")
+    # ch.basic_ack(delivery_tag=method.delivery_tag)
+    # print("Handling task.")
     # upload(task)
+
+def start_listen_task():
+    asyncio.run(listen_task())
 
 def main():
     # 创建命令行参数解析器
@@ -133,8 +134,10 @@ def main():
     transcode_parser.set_defaults(func=transcode)
 
     # 监听任务指派命令
-    listen_parser = subparsers.add_parser("listen", help="Listen for task assignment")
-    listen_parser.set_defaults(func=listen_task)
+    t = threading.Thread(target= start_listen_task)
+    t.start()
+    # listen_parser = subparsers.add_parser("listen", help="Listen for task assignment")
+    # listen_parser.set_defaults(func=listen_task)
 
     # 解析命令行参数
     args = parser.parse_args()

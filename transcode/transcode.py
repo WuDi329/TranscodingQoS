@@ -12,6 +12,8 @@ from .config import get_config_value, parse_config_file
 import datetime
 from db.mysqlhelper import MySQLHelper
 from .measure import QoSAnalyzer
+from mq.mqhelper import MQUtil
+from mq.taskmessage import TaskMessage
 
 def read_video_info(video_path: str):
     """
@@ -92,7 +94,7 @@ def extract_video_message(video_info: dict, video_path: str):
     return video
 
 # 修改函数名为upload
-def upload(video_path: str, task: Task):
+async def upload(video_path: str, task: Task):
     """
         
 
@@ -106,11 +108,11 @@ def upload(video_path: str, task: Task):
     videotask = generate_videotask(video, task)
     # 这里修改了代码逻辑，将具体的代码执行和生成任务分开
     # execute_transcode(videotask)
-    dispatch_task(videotask)
+    await dispatch_task(videotask)
     
 
 # 这里将会随机将task分配给一个节点
-def dispatch_task(videotask: VideoTask):
+async def dispatch_task(videotask: VideoTask):
     """
         分配任务，将任务分配给一个节点。
 
@@ -126,6 +128,13 @@ def dispatch_task(videotask: VideoTask):
     result = helper.search_mac_unfinished_videotasks(mac)
     print(result)
     helper.disconnect()
+
+    # 这里使用mq通知节点消息
+    mqhelper = MQUtil()
+    await mqhelper.connect()
+    task = TaskMessage(videotask.taskid, mac)
+    await mqhelper.send_message("task_queue", task)
+    await mqhelper.disconnect()
 
     # video = Video(video_info["streams"][0]["r_frame_rate"], video_info["streams"][0]["duration"])
 
