@@ -15,14 +15,18 @@ class MySQLHelper:
         self.cursor = None
 
     def connect(self):
-        self.cnx = mysql.connector.connect(
-            host=self.host,
-            port = self.port,
-            user=self.user,
-            password=self.password,
-            database=self.database
-        )
-        self.cursor = self.cnx.cursor()
+        try:
+            self.cnx = mysql.connector.connect(
+                host=self.host,
+                port = self.port,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+            self.cursor = self.cnx.cursor()
+        except mysql.connector.Error as e:
+            print(f"Failed to connect to MySQL server: {e}")
+            raise
 
     def disconnect(self):
         self.cursor.close()
@@ -81,6 +85,18 @@ class MySQLHelper:
             JOIN videotask v ON c.taskid = v.taskid
             WHERE c.devicemac = '{}' AND c.status = 'pending'
         """.format(mac)
+        return self.execute_query(query)
+    
+    def search_current_mac_videotask(self, mac, taskid):
+        """
+            根据mac地址和taskid查询当前任务信息。
+        """
+        query = """
+            SELECT  c.id, c.taskid, v.duration, v.origincodec, v.outputcodec, v.originresolution, v.audiocodec, v.bitrate, v.framerate, v.mode
+            FROM contracttask c
+            JOIN videotask v ON c.taskid = v.taskid
+            WHERE c.devicemac = '{}' AND c.status = 'pending' AND c.taskid = '{}'
+        """.format(mac, taskid)
         return self.execute_query(query)
     
     def search_specific_videotask(self, taskid):

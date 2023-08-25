@@ -13,3 +13,9 @@ class Message:
             将消息对象转换为字节串类型.
         """
         pass
+
+    def decode(self):
+        """
+            将字节串类型的消息转换为字符串类型.
+        """
+        pass

@@ -40,3 +40,6 @@ class TaskMessage(Message):
                 bytestring (bytes): TaskMessage对象转换的字节流.
         """
         return pickle.dumps(self.to_dict())
+    
+    def decode(self, data: bytes):
+        return pickle.loads(data)

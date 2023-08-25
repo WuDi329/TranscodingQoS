@@ -7,6 +7,7 @@ import pika
 import sys
 from mq.mqhelper import MQUtil
 from mq.message import Message
+from mq.taskmessage import TaskMessage
 import threading
 import asyncio
 from db.mysqlhelper import MySQLHelper
@@ -20,6 +21,9 @@ from enums import Resolution, VideoCodec, Bitrate, Mode
 from transcode.task import Task
 from transcode.device import Device
 from transcode.videotask import VideoTask
+import pickle
+
+
 
 # 定义登录信息
 login_info = {}
@@ -68,7 +72,9 @@ def transcode(taskid):
     execute_transcode(vt, login_info["mac"])
     # print(result)
     # VideoTask.create_task_from_db(taskid)
-    
+
+def print_enter_command():
+    print("Enter command: ", end="", flush=True)    
 
 async def listen_task() -> None:
     """
@@ -79,10 +85,10 @@ async def listen_task() -> None:
     mqutil = MQUtil()
     await mqutil.connect()
     await mqutil.receive_message("task_queue", handle_task)
-
+    print_enter_command()
 # def handle_task(ch, method, properties, body) -> None: 
 
-def handle_task(message: Message) -> None:
+def handle_task(message) -> None:
 
     """
         ch RabbitMQ channel 对象
@@ -97,8 +103,13 @@ def handle_task(message: Message) -> None:
     # taskid, video_path, task_name = message.split(",")
     # task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Normal)
     # transcode(video_path, task)
-
+    
+    # message = message.decode()
+    message_info = pickle.loads(message.body)
+    # print(task_message)
     print("Received task.")
+    show_task(message_info)
+    print_enter_command()
     # time.sleep(1)
 
     # 使用 ch.basic_ack() 方法确认消息已经被处理完毕，并将消息从队列中删除。
@@ -108,6 +119,27 @@ def handle_task(message: Message) -> None:
     # ch.basic_ack(delivery_tag=method.delivery_tag)
     # print("Handling task.")
     # upload(task)
+def show_task(message_info: str) -> None:
+    """
+        打印任务信息。
+
+        Args:
+            task_message (str): task-id.
+
+    """
+    # print(message)
+    helper = MySQLHelper()
+    helper.connect()
+    res = helper.search_current_mac_videotask(message_info["mac"], message_info["taskid"])
+    print(res)
+    table = ComplexTaskTable.table
+    table.clear_rows()
+    for row in res:
+        table.add_row(row)
+    helper.disconnect()
+    print("当前任务信息：")
+    print(table)
+
 
 def start_listen_task():
     asyncio.run(listen_task())
@@ -152,6 +184,8 @@ def main():
     while True:
         command = input("Enter command: ")
         if command == "logout":
+            # asyncio.run(stop_listen_task())
+            t.join()
             break
         elif command == "query":
             query()
