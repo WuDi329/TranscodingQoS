@@ -2,6 +2,7 @@ import mysql.connector
 from transcode.video import Video
 from transcode.videotask import VideoTask
 from transcode.device import Device
+from transcode.qosmetric import QualityOfServiceMetric
 import uuid
 
 class MySQLHelper:
@@ -64,6 +65,11 @@ class MySQLHelper:
         query = "INSERT INTO device (mac) VALUES (%s)"
         value = device.macaddress
         self.execute_insert(query, (value, ))
+
+    def insert_metric(self, metric: QualityOfServiceMetric):
+        query = "INSERT INTO metric (contractid, starttime, executiontime, videoqualitykind, audioqualitykind, originfilesize, outputfilesize, videoquality, audioquality) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        value = (metric.contractid, metric.starttime, metric.executiontime, metric.videoqualitykind, metric.audioqualitykind, metric.originfilesize, metric.outputfilesize, metric.videoquality, metric.audioquality)
+        self.execute_insert(query, value)
     
     def contract_task(self, taskid, mac):
         query = "INSERT INTO contracttask (id, taskid, devicemac) VALUES (%s, %s, %s) "
@@ -99,16 +105,17 @@ class MySQLHelper:
         """.format(mac, taskid)
         return self.execute_query(query)
     
-    def search_specific_videotask(self, taskid):
+    def search_specific_videotask(self, contractid):
         """
             根据taskid查询任务。
         """
         query = """
-            SELECT  vt.taskid, v.path, v.outputpath, v.resolution, v.videocodec, v.bitrate, v.framerate, v.duration, v.audiocodec, vt.originresolution, vt.outputcodec, vt.bitrate, vt.mode
-            FROM videotask vt
+            SELECT  vt.taskid, v.path, v.outputpath, v.resolution, v.videocodec, v.bitrate, v.framerate, v.duration, v.audiocodec, vt.originresolution, vt.outputcodec, vt.bitrate, vt.mode, ct.id
+            FROM contracttask ct
+            JOIN videotask vt ON ct.taskid = vt.taskid
             JOIN video v ON v.vid = vt.vid
-            WHERE vt.taskid = '{}'
-        """.format(taskid)
+            WHERE ct.id = '{}'
+        """.format(contractid)
         return self.execute_query(query)
     
     def update_mac_task(self, taskid, mac):
