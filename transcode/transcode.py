@@ -183,8 +183,8 @@ def read_encode_ini():
     return encode_lib
 
 # 具体的accelerator目前设定为随机
-def execute_transcode(videotask: VideoTask, mac):
-
+def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
+    print(videotask.outputcodec)
     task_outputcodec = videotask.outputcodec
     task_resolution = videotask.outputresolution
     task_bitrate = videotask.bitrate
@@ -217,9 +217,15 @@ def execute_transcode(videotask: VideoTask, mac):
     print(command)
     # 创建QoSAnalyzer对象
     analyzer = QoSAnalyzer(videotask, outputpath)
-    with analyzer.measure():
+    qosmetric = None
+    with analyzer.measure(contractid) as qosmetric:
         subprocess.run(command, shell=True, stdout=subprocess.PIPE)
         print("转码完成")
+    # print(qosmetric)
+    # helper = MySQLHelper()
+    # helper.connect()
+    # helper.insert_metric(qosmetric)
+    # # helper.disconnect()
     
     # 这里需要更改数据库任务结果
     helper = MySQLHelper()
@@ -251,10 +257,10 @@ def get_random_accelerator(videocodec: VideoCodec):
     print(config)
     return config
 
-def create_task_from_db(taskid):
+def create_task_from_db(contractid):
     helper = MySQLHelper()
     helper.connect()
-    result = helper.search_specific_videotask(taskid)
+    result = helper.search_specific_videotask(contractid)
     print(result)
     helper.disconnect()
     if result[0][3] == "1920x1080":

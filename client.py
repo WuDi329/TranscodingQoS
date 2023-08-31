@@ -17,6 +17,7 @@ from prettytable import PrettyTable
 # sys.path.append("/home/wudi/desktop/measureQuality/")
 # from transcode.transcode import read_video_info, upload
 from transcode.transcode import create_task_from_db, execute_transcode
+# 
 from enums import Resolution, VideoCodec, Bitrate, Mode
 from transcode.task import Task
 from transcode.device import Device
@@ -62,14 +63,17 @@ def query():
 
 
 
-def transcode(taskid):
+def transcode(contractid):
     """
         转码。
 
+        参数 从 taskid 修改为 contractid
+
     """
     print("Transcoding...")
-    vt = create_task_from_db(taskid)
-    execute_transcode(vt, login_info["mac"])
+    vt = create_task_from_db(contractid)
+    # print(vt)
+    execute_transcode(vt, login_info["mac"], contractid)
     # print(result)
     # VideoTask.create_task_from_db(taskid)
 
