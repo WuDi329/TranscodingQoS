@@ -14,6 +14,7 @@ from db.mysqlhelper import MySQLHelper
 from .measure import QoSAnalyzer
 from mq.mqhelper import MQUtil
 from mq.taskmessage import TaskMessage
+import functools
 
 def read_video_info(video_path: str):
     """
@@ -183,8 +184,8 @@ def read_encode_ini():
     return encode_lib
 
 # 具体的accelerator目前设定为随机
-def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
-    print(videotask.outputcodec)
+
+def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     task_outputcodec = videotask.outputcodec
     task_resolution = videotask.outputresolution
     task_bitrate = videotask.bitrate
@@ -205,22 +206,37 @@ def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
     # 获取当前时间戳
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
-    outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}{extension}")
+    command = ""
+    if videotask.mode == Mode.Normal:
+        outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}{extension}")
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
+    elif videotask.mode == Mode.Latency:
+        outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}")
+        if not os.path.exists(outputpath):
+            os.mkdir(outputpath)
+        build_m3u8(outputpath, float(videotask.duration))
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy -f segment -segment -segment_time 10 -segment_list {}/out.m3u8 -segment_format mpegts {}/output_%03d.ts".format(path, codec, bitrate, outputpath, outputpath)
 
-    print("当前输出路径")
+    print("当前command")
     print(outputpath)
+    return command, outputpath
 
-    # 以下部分开始拼凑ffmpeg指令
+def handle_transcode(command: str):
+    subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+    print("转码完成")
 
-    command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
-    print("当前执行指令")
-    print(command)
+
+def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
+
+    command, outputpath = prepare_transcode(videotask, mac, contractid)
+    # print(videotask.outputcodec)
+
+
     # 创建QoSAnalyzer对象
     analyzer = QoSAnalyzer(videotask, outputpath)
-    qosmetric = None
-    with analyzer.measure(contractid) as qosmetric:
-        subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-        print("转码完成")
+
+    callback_func = functools.partial(handle_transcode, command)
+    analyzer.measure(callback_func, contractid)
     # print(qosmetric)
     # helper = MySQLHelper()
     # helper.connect()
@@ -232,6 +248,24 @@ def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
     helper.connect()
     helper.update_mac_task(videotask.taskid, mac)
     helper.disconnect()
+
+def build_m3u8(outputpath: str, duration: float):
+    ts_duration = 10
+    ts_count = int(duration // ts_duration + (duration % ts_duration > 0))
+        # 拼凑 playlist.m3u8 文件
+    # 这里设置了最大时长10s
+    with open(os.path.join(outputpath, "playlist.m3u8"), 'w') as f:
+        f.write('#EXTM3U\n')
+        f.write('#EXT-X-VERSION:3\n')
+        f.write('#EXT-X-MEDIA-SEQUENCE:0\n')
+        f.write('#EXT-X-ALLOW-CACHE:YES\n')
+        f.write(f'#EXT-X-TARGETDURATION:10\n')
+        for i in range(ts_count):
+            ts_filename = f'output_{i:03d}.ts'
+            ts_duration_actual = min(ts_duration, duration - i * ts_duration)
+            f.write(f'#EXTINF:{ts_duration_actual:.6f},\n')
+            f.write(f'{ts_filename}\n')
+        f.write('#EXT-X-ENDLIST\n')
 
 
 
