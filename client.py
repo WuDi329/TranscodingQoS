@@ -62,18 +62,20 @@ def query():
     print(table)
 
 
-
 def transcode(contractid):
     """
-        转码。
+        普通情况下的转码。
 
         参数 从 taskid 修改为 contractid
 
     """
     print("Transcoding...")
     vt = create_task_from_db(contractid)
-    # print(vt)
+    # 这里要做一个判断，判断当前任务的类型，如果是normal，则直接调用execute_transcode
+    # 如果是latency-critical，则调用execute_latency_transcode
     execute_transcode(vt, login_info["mac"], contractid)
+    # elif vt.mode == Mode.Latency:
+    #     execute_latency_transcode(vt, login_info["mac"], contractid)
     # print(result)
     # VideoTask.create_task_from_db(taskid)
 

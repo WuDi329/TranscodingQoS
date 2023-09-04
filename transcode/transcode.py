@@ -215,7 +215,7 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
         if not os.path.exists(outputpath):
             os.mkdir(outputpath)
         build_m3u8(outputpath, float(videotask.duration))
-        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy -f segment -segment -segment_time 10 -segment_list {}/out.m3u8 -segment_format mpegts {}/output_%03d.ts".format(path, codec, bitrate, outputpath, outputpath)
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy -f segment -segment_time 10 -segment_list {}/out.m3u8 -segment_format mpegts {}/output_%03d.ts".format(path, codec, bitrate, outputpath, outputpath)
 
     print("当前command")
     print(outputpath)
@@ -231,12 +231,15 @@ def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
     command, outputpath = prepare_transcode(videotask, mac, contractid)
     # print(videotask.outputcodec)
 
-
     # 创建QoSAnalyzer对象
     analyzer = QoSAnalyzer(videotask, outputpath)
 
     callback_func = functools.partial(handle_transcode, command)
-    analyzer.measure(callback_func, contractid)
+    if videotask.mode == Mode.Normal:
+        analyzer.measure(callback_func, contractid) 
+    elif videotask.mode == Mode.Latency:
+        analyzer.measure_latency(callback_func, contractid, outputpath)
+
     # print(qosmetric)
     # helper = MySQLHelper()
     # helper.connect()

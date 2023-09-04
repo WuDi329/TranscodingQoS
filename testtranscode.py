@@ -7,7 +7,7 @@ import asyncio
 
 async def start():
 
-    task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Normal)
+    task = Task(Resolution.FHD, VideoCodec.H264, Bitrate.ULTRA, Mode.Latency)
 
     await upload("/dataset/dataset/reference_videos/basketball_10sec_1920x1080_24.mp4",task)
 
