@@ -61,13 +61,13 @@ class QoSAnalyzer:
         print(self.audio_analyzer)
         # self.qos = QualityOfService(video_analyzer, audio_analyzer)
 
-    @contextmanager
-    def measure(self, contractid: str):
+    # @contextmanager
+    def measure(self, cb, contractid: str):
         # result = 
         origin_file_size = os.path.getsize(self.origin_video_path)
         start_time = time.monotonic()
         # try:
-        yield
+        cb()
         # finally:
         end_time = time.monotonic()
         elapsed_time = end_time - start_time
@@ -96,3 +96,6 @@ class QoSAnalyzer:
         helper.connect()
         helper.insert_metric(qosmetric)
         helper.disconnect()
+
+    def measure_latency():
+        pass
