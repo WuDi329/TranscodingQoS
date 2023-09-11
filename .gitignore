@@ -3,3 +3,4 @@ __pycache__/
 *.txt
 *.wav
 *.json
+*.log
