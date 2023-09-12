@@ -10,6 +10,9 @@ stop_event = threading.Event()
 def handle_request(input):
     print ("Handling input: " + input)
 
+def collect_latency():
+    pass
+
 def collect_bitrate_framerate(import_url):
     print("in collect_bitrate_framerate")
     print(import_url)
@@ -59,5 +62,5 @@ if __name__ == "__main__":
     with open("/home/wd/desktop/VideoQuality/curr_instruction.txt", "a") as f:
         f.write(" ".join(sys.argv[1:]))
         f.close()
-    handle_transcoding(" ".join(sys.argv[1:-1]), sys.argv[4], sys.argv[-1])
+    handle_transcoding(" ".join(sys.argv[1:-1]), sys.argv[-1].split("]")[-1], sys.argv[-1])
     # command = "ffmpeg -i rtmp://localhost:1935/live/stream -c:v libx264 -b:v 5M -c:a copy -f mpegts -muxdelay 0.001 -muxpreload 0.001 -y output_000.ts"
