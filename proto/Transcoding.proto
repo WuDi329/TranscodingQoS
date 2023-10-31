@@ -1,0 +1,102 @@
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+import public "google/protobuf/timestamp.proto";
+
+// option java_multiple_files = true;
+// option java_package = "io.grpc.examples.helloworld";
+// option java_outer_classname = "HelloWorldProto";
+// option objc_class_prefix = "HLW";
+
+package transcode;
+
+// The greeting service definition.
+service Transcoder {
+  // Sends a greeting
+  rpc DispatchVoDTask (DispatchVoDRequest) returns (DispatchVoDReply) {}
+
+  rpc FinishTask (FinishVoDRequest) returns (FinishVoDReply) {}
+
+//   rpc SayHelloStreamReply (HelloRequest) returns (stream HelloReply) {}
+}
+
+message VideoInfo {
+    string vid = 1;
+    string duration = 2;
+    enum origincodec {
+        H264 = 0;
+        H265 = 1;
+        VP9 = 2;
+        AV1 = 3;
+    };
+    string originresolution = 3;
+    enum originaudiocodec {
+        AAC = 0;
+        NONE = 1;
+    };
+    string originframerate = 4;
+    string originbitrate = 5;
+}
+
+message DispatchVoDRequest {
+    string taskid = 1;
+    VideoInfo originurl = 2;
+    string outputurl = 3;
+    enum outputcodec {
+        H264 = 0;
+        H265 = 1;
+        VP9 = 2;
+        AV1 = 3;
+    };
+    string outputresolution = 4;
+    enum outputaudiocodec {
+        AAC = 0;
+        NONE = 1;
+    };
+    string outputframerate = 5;
+    enum outputbitrate {
+        SD = 0;
+        HD = 1;
+        FHD = 2;
+    };
+}
+
+message DispatchVoDReply {
+  string taskid = 1;
+}
+
+message FinishVoDRequest {
+  string taskid = 1;
+  TaskResult result = 2;
+}
+
+message TaskResult {
+  enum status {
+    FINISHED = 0;
+    FAILED = 1;
+  };
+  enum vqa {
+    SSIM = 0;
+    VMAF = 1;
+  }
+  string hash = 1;
+  google.protobuf.Timestamp finishtime = 2;
+  string error = 3;
+}
+
+
+message FinishVoDReply {
+  string taskid = 1;
+}
