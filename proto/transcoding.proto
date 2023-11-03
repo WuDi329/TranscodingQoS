@@ -32,45 +32,44 @@ service Transcoder {
 //   rpc SayHelloStreamReply (HelloRequest) returns (stream HelloReply) {}
 }
 
+enum VideoCodec {
+  H264 = 0;
+  H265 = 1;
+  VP9 = 2;
+  AV1 = 3;
+};
+
+enum AudioCodec {
+  AAC = 0;
+  NONE = 1;
+};
+
+enum Bitrate {
+  SD = 0;
+  HD = 1;
+  FHD = 2;
+};
+
 message VideoInfo {
     string vid = 1;
     string duration = 2;
-    enum origincodec {
-        H264 = 0;
-        H265 = 1;
-        VP9 = 2;
-        AV1 = 3;
-    };
-    string originresolution = 3;
-    enum originaudiocodec {
-        AAC = 0;
-        NONE = 1;
-    };
-    string originframerate = 4;
-    string originbitrate = 5;
+    VideoCodec origincodec = 3;
+    string originresolution = 4;
+    AudioCodec Originaudiocodec = 5;
+    string originframerate = 6;
+    string originbitrate = 7;
 }
 
 message DispatchVoDRequest {
     string taskid = 1;
-    VideoInfo originurl = 2;
-    string outputurl = 3;
-    enum outputcodec {
-        H264 = 0;
-        H265 = 1;
-        VP9 = 2;
-        AV1 = 3;
-    };
-    string outputresolution = 4;
-    enum outputaudiocodec {
-        AAC = 0;
-        NONE = 1;
-    };
-    string outputframerate = 5;
-    enum outputbitrate {
-        SD = 0;
-        HD = 1;
-        FHD = 2;
-    };
+    VideoInfo videoinfo = 2;
+    string originurl = 3;
+    string outputurl = 4;
+    VideoCodec outputcodec = 5;
+    string outputresolution = 6;
+    AudioCodec outputaudiocodec = 7;
+    string outputframerate = 8;
+    Bitrate bitrate = 9;
 }
 
 message DispatchVoDReply {
