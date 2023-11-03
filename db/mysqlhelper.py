@@ -56,6 +56,10 @@ class MySQLHelper:
         query = "SELECT mac FROM device LIMIT 1"
         return self.execute_query(query)
     
+    def query_second_device(self):
+        query = "SELECT mac FROM device ORDER BY deviceid DESC LIMIT 2"
+        return self.execute_query(query)
+    
     def insert_videotask(self, videotask:  VideoTask):
         query = "INSERT INTO videotask (taskid, path, outputpath, vid, duration, origincodec, outputcodec, originresolution, outputresolution, audiocodec, bitrate, framerate, mode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         value = (videotask.taskid, videotask.path, videotask.outputpath, videotask.vid, videotask.duration, videotask.origincodec.value, videotask.outputcodec.value, videotask.originresolution.value, videotask.outputresolution.value, videotask.audiocodec.value, videotask.bitrate.value, videotask.framerate, videotask.mode.value)

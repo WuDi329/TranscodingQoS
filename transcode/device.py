@@ -19,7 +19,9 @@ class Device(object):
                 mac_address (str): 设备的MAC地址.
         """
         # 获取设备的名称
-        ifname = "eth0"
+        # 在gpu1虚拟机上出现了独特的问题这里进行了修改
+        # ifname = "eth0"
+        ifname = "enp1s0"
 
         # 获取设备的MAC地址
         with open('/sys/class/net/%s/address' % ifname) as f:

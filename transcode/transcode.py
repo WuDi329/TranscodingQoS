@@ -28,10 +28,10 @@ def read_video_info(video_path: str):
             length (float): 视频的长度.
     """
     current_path = os.path.abspath(__file__)
-    current_path = os.path.abspath(__file__)
     cmd = "ffprobe -loglevel error -print_format json -show_streams {} > test.json".format(video_path, os.path.join(current_path, "test.json"))
     print("当前执行读取视频信息指令：{}".format(cmd))
-    subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    # 这里修了个一个小bug，之前是异步执行，提交任务时准确性存疑
+    subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
 
     video_info = {}
     with open("test.json", "r") as f:
@@ -123,7 +123,9 @@ async def dispatch_task(videotask: VideoTask):
     # 这里应当随机选择一个节点，但是在demo阶段只有一个节点，所以直接执行
     helper = MySQLHelper()
     helper.connect()
-    mac = helper.query_first_device()[0][0]
+    # 这里print一下观察输出结果
+    # 这里的逻辑有点问题，要找一个合适的dispatch方式，一方面方便测试，一方面方便实际应用。
+    mac = helper.query_second_device()[0][0]
     print(mac)
     helper.contract_task(videotask.taskid, mac)
     result = helper.search_mac_unfinished_videotasks(mac)
