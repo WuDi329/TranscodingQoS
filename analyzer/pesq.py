@@ -54,6 +54,7 @@ class PESQAnalyzer(AudioQualityAnalyzer):
         # print('ref.shape')
         # print(ref.shape)
         result = pesq(rate, ref, deg, 'wb')
+        result = round(result, 3)
         print('pesq分析结果为{}'.format(result))
         return result
 
