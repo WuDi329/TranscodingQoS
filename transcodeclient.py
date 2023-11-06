@@ -16,18 +16,18 @@ async def run() -> None:
         response = await stub.DispatchVoDTask(transcoding_pb2.DispatchVoDRequest(
             taskid="7897vahuovanoi",
             originurl="/home/wd/cartoon-swim.mp4",
-            outputurl="/home/wd/cartoon-swim.mp4",
-            # outputcodec=1,
-            outputresolution="1920x1080",
-            # outputaudiocodec=1,
+            outputurl="/home/wd/",
+            outputcodec=1,
+            outputresolution=2,
+            outputaudiocodec=1,
             outputframerate="24",
-            # outputbitrate=0,
+            bitrate=3,
             videoinfo=transcoding_pb2.VideoInfo(
                 vid="12312312",
                 duration="468.93",
                 origincodec=1,
-                originresolution="1920x1080",
-                # originaudiocodec=1,
+                originresolution=2,
+                originaudiocodec=1,
                 originframerate="24",
                 originbitrate="180000"
         )))
