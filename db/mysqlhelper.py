@@ -5,6 +5,7 @@ from transcode.device import Device
 from transcode.qosmetric import QualityOfServiceMetric
 import uuid
 
+
 class MySQLHelper:
     def __init__(self):
         self.host = '49.52.27.50'
@@ -19,7 +20,7 @@ class MySQLHelper:
         try:
             self.cnx = mysql.connector.connect(
                 host=self.host,
-                port = self.port,
+                port=self.port,
                 user=self.user,
                 password=self.password,
                 database=self.database
@@ -37,7 +38,7 @@ class MySQLHelper:
         self.cursor.execute(query)
         # self.cnx.commit()
         return self.cursor.fetchall()
-    
+
     def execute_update(self, query, values):
         self.cursor.execute(query, values)
         self.cnx.commit()
@@ -46,23 +47,25 @@ class MySQLHelper:
         self.cursor.execute(query, values)
         self.cnx.commit()
         return self.cursor.lastrowid
-    
-    def insert_video(self, video:Video):
+
+    def insert_video(self, video: Video):
         query = "INSERT INTO video (vid, path, outputpath, resolution, videocodec, bitrate, framerate, duration, audiocodec) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        value = (video.vid, video.path, video.outputpath, video.resolution.value, video.videocodec.value, video.bitrate, video.framerate, video.duration, video.audiocodec.value)
+        value = (video.vid, video.path, video.outputpath, video.resolution.value, video.videocodec.value,
+                 video.bitrate, video.framerate, video.duration, video.audiocodec.value)
         self.execute_insert(query, value)
 
     def query_first_device(self):
         query = "SELECT mac FROM device LIMIT 1"
         return self.execute_query(query)
-    
+
     def query_second_device(self):
         query = "SELECT mac FROM device ORDER BY deviceid DESC LIMIT 2"
         return self.execute_query(query)
-    
+
     def insert_videotask(self, videotask:  VideoTask):
         query = "INSERT INTO videotask (taskid, path, outputpath, vid, duration, origincodec, outputcodec, originresolution, outputresolution, audiocodec, bitrate, framerate, mode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        value = (videotask.taskid, videotask.path, videotask.outputpath, videotask.vid, videotask.duration, videotask.origincodec.value, videotask.outputcodec.value, videotask.originresolution.value, videotask.outputresolution.value, videotask.audiocodec.value, videotask.bitrate.value, videotask.framerate, videotask.mode.value)
+        value = (videotask.taskid, videotask.path, videotask.outputpath, videotask.vid, videotask.duration, videotask.origincodec.value, videotask.outputcodec.value,
+                 videotask.originresolution.value, videotask.outputresolution.value, videotask.audiocodec.value, videotask.bitrate.value, videotask.framerate, videotask.mode.value)
         self.execute_insert(query, value)
 
     def insert_device(self, device: Device):
@@ -70,21 +73,27 @@ class MySQLHelper:
         value = device.macaddress
         self.execute_insert(query, (value, ))
 
+    def insert_device_direct(self, mac):
+        query = "INSERT INTO device (mac) VALUES (%s)"
+        value = mac
+        self.execute_insert(query, (value, ))
+
     def insert_metric(self, metric: QualityOfServiceMetric):
         query = "INSERT INTO metric (contractid, starttime, executiontime, videoqualitykind, audioqualitykind, originfilesize, outputfilesize, videoquality, audioquality) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        value = (metric.contractid, metric.starttime, metric.executiontime, metric.videoqualitykind, metric.audioqualitykind, metric.originfilesize, metric.outputfilesize, metric.videoquality, metric.audioquality)
+        value = (metric.contractid, metric.starttime, metric.executiontime, metric.videoqualitykind,
+                 metric.audioqualitykind, metric.originfilesize, metric.outputfilesize, metric.videoquality, metric.audioquality)
         self.execute_insert(query, value)
-    
+
     def contract_task(self, taskid, mac):
         query = "INSERT INTO contracttask (id, taskid, devicemac) VALUES (%s, %s, %s) "
         value = (str(uuid.uuid1()), taskid, mac)
         self.execute_insert(query, value)
-    
+
     def finish_contract_task(self, id):
         query = "UPDATE contracttask SET status = 'finished' WHERE id = %s"
         value = (id)
         self.execute_insert(query, value)
-    
+
     def search_mac_unfinished_videotasks(self, mac):
         """
             根据mac地址查询所有状态为pending的任务。
@@ -96,7 +105,7 @@ class MySQLHelper:
             WHERE c.devicemac = '{}' AND c.status = 'pending'
         """.format(mac)
         return self.execute_query(query)
-    
+
     def search_current_mac_videotask(self, mac, taskid):
         """
             根据mac地址和taskid查询当前任务信息。
@@ -108,7 +117,7 @@ class MySQLHelper:
             WHERE c.devicemac = '{}' AND c.status = 'pending' AND c.taskid = '{}'
         """.format(mac, taskid)
         return self.execute_query(query)
-    
+
     def search_specific_videotask(self, contractid):
         """
             根据taskid查询任务。
@@ -121,7 +130,7 @@ class MySQLHelper:
             WHERE ct.id = '{}'
         """.format(contractid)
         return self.execute_query(query)
-    
+
     def update_mac_task(self, taskid, mac):
         """
             更新mac地址。

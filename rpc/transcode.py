@@ -30,7 +30,7 @@ def execute_vod_transcode(videotask: VideoTask, mac: str, contractid: str):
     #  这里把具体的transcode指令作为参数传入
     # callback_func = functools.partial(handle_transcode, command)
     # if videotask.mode == Mode.Normal:
-    #     analyzer.measure(callback_func, contractid) 
+    #     analyzer.measure(callback_func, contractid)
     # elif videotask.mode == Mode.Latency:
     #     analyzer.measure_latency(callback_func, contractid, outputpath)
 
@@ -39,12 +39,13 @@ def execute_vod_transcode(videotask: VideoTask, mac: str, contractid: str):
     # helper.connect()
     # helper.insert_metric(qosmetric)
     # # helper.disconnect()
-    
+
     # 这里需要更改数据库任务结果
     helper = MySQLHelper()
     helper.connect()
     helper.update_mac_task(videotask.taskid, mac)
     helper.disconnect()
+
 
 def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     task_outputcodec = videotask.outputcodec
@@ -57,11 +58,13 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     encode_lib = read_encode_ini()
     logger.info(f"encode_lib is {encode_lib}")
     # 获取具体编码库
-    codec = get_config_value(encode_lib, task_outputcodec.value, accelerator.value)
+    codec = get_config_value(
+        encode_lib, task_outputcodec.value, accelerator.value)
 
     logger.info(f"Selected {codec}  for {videotask.taskid}.")
     # 获取具体比特率
-    bitrate = get_config_value(encode_lib, task_resolution.value, task_bitrate.value)
+    bitrate = get_config_value(
+        encode_lib, task_resolution.value, task_bitrate.value)
 
     path = videotask.path
 
@@ -73,8 +76,10 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
 
     command = ""
     if videotask.mode == Mode.Normal:
-        outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}{extension}")
-        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
+        outputpath = os.path.join(
+            videotask.outputpath, f"{filename}_{timestamp}{extension}")
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(
+            path, codec, bitrate, outputpath)
     # 暂时不考虑latency场景，假定所有的都是
     # elif videotask.mode == Mode.Latency:
     #     outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}")
@@ -86,6 +91,7 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     # print("当前command")
     # print(outputpath)
     return command, outputpath
+
 
 def get_random_accelerator(videocodec: VideoCodec):
     """
@@ -104,11 +110,12 @@ def get_random_accelerator(videocodec: VideoCodec):
     if config == 'software':
         config = Accelerator.software
     elif config == 'nvidia':
-        config =  Accelerator.nvidia
+        config = Accelerator.nvidia
     elif config == 'intel':
-        config =  Accelerator.intel
+        config = Accelerator.intel
     print(config)
     return config
+
 
 def read_capability():
     """
@@ -126,6 +133,7 @@ def read_capability():
     else:
         capability = get_nvenc_capability()
     return capability
+
 
 def read_encode_ini():
     """

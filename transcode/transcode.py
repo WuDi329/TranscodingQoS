@@ -17,13 +17,8 @@ from mq.taskmessage import TaskMessage
 import functools
 
 
-    
-
-
-
-    
-
 # 这里将会随机将task分配给一个节点
+# 实际场景中，dispatch_task 将会由poco-client 和 contract进行沟通，这个沟通的过程需要细化
 async def dispatch_task(videotask: VideoTask):
     """
         分配任务，将任务分配给一个节点。
@@ -53,7 +48,6 @@ async def dispatch_task(videotask: VideoTask):
     # video = Video(video_info["streams"][0]["r_frame_rate"], video_info["streams"][0]["duration"])
 
 
-
 def read_capability():
     """
         读取capabilities.json，返回由转码能力组成的对象。
@@ -70,6 +64,7 @@ def read_capability():
     else:
         capability = get_nvenc_capability()
     return capability
+
 
 def read_encode_ini():
     """
@@ -90,6 +85,7 @@ def read_encode_ini():
 
 # 具体的accelerator目前设定为随机
 
+
 def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     task_outputcodec = videotask.outputcodec
     task_resolution = videotask.outputresolution
@@ -99,9 +95,11 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
     # 访问test.ini获取转码参数
     encode_lib = read_encode_ini()
     # 获取具体编码库
-    codec = get_config_value(encode_lib, task_outputcodec.value, accelerator.value)
+    codec = get_config_value(
+        encode_lib, task_outputcodec.value, accelerator.value)
     # 获取具体比特率
-    bitrate = get_config_value(encode_lib, task_resolution.value, task_bitrate.value)
+    bitrate = get_config_value(
+        encode_lib, task_resolution.value, task_bitrate.value)
 
     path = videotask.path
 
@@ -113,18 +111,23 @@ def prepare_transcode(videotask: VideoTask, mac: str, contractid: str):
 
     command = ""
     if videotask.mode == Mode.Normal:
-        outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}{extension}")
-        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(path, codec, bitrate, outputpath)
+        outputpath = os.path.join(
+            videotask.outputpath, f"{filename}_{timestamp}{extension}")
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy {}".format(
+            path, codec, bitrate, outputpath)
     elif videotask.mode == Mode.Latency:
-        outputpath = os.path.join(videotask.outputpath, f"{filename}_{timestamp}")
+        outputpath = os.path.join(
+            videotask.outputpath, f"{filename}_{timestamp}")
         if not os.path.exists(outputpath):
             os.mkdir(outputpath)
         build_m3u8(outputpath, float(videotask.duration))
-        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy -f segment -segment_time 10 -segment_list {}/out.m3u8 -segment_format mpegts {}/output_%03d.ts".format(path, codec, bitrate, outputpath, outputpath)
+        command = "ffmpeg -y -i {} -c:v {} -b:v {} -c:a copy -f segment -segment_time 10 -segment_list {}/out.m3u8 -segment_format mpegts {}/output_%03d.ts".format(
+            path, codec, bitrate, outputpath, outputpath)
 
     print("当前command")
     print(outputpath)
     return command, outputpath
+
 
 def handle_transcode(command: str):
     subprocess.run(command, shell=True, stdout=subprocess.PIPE)
@@ -141,7 +144,7 @@ def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
 
     callback_func = functools.partial(handle_transcode, command)
     if videotask.mode == Mode.Normal:
-        analyzer.measure(callback_func, contractid) 
+        analyzer.measure(callback_func, contractid)
     elif videotask.mode == Mode.Latency:
         analyzer.measure_latency(callback_func, contractid, outputpath)
 
@@ -150,17 +153,18 @@ def execute_transcode(videotask: VideoTask, mac: str, contractid: str):
     # helper.connect()
     # helper.insert_metric(qosmetric)
     # # helper.disconnect()
-    
+
     # 这里需要更改数据库任务结果
     helper = MySQLHelper()
     helper.connect()
     helper.update_mac_task(videotask.taskid, mac)
     helper.disconnect()
 
+
 def build_m3u8(outputpath: str, duration: float):
     ts_duration = 10
     ts_count = int(duration // ts_duration + (duration % ts_duration > 0))
-        # 拼凑 playlist.m3u8 文件
+    # 拼凑 playlist.m3u8 文件
     # 这里设置了最大时长10s
     with open(os.path.join(outputpath, "playlist.m3u8"), 'w') as f:
         f.write('#EXTM3U\n')
@@ -176,7 +180,6 @@ def build_m3u8(outputpath: str, duration: float):
         f.write('#EXT-X-ENDLIST\n')
 
 
-
 def get_random_accelerator(videocodec: VideoCodec):
     """
         从capabilities.json中随机获取一个转码能力。
@@ -184,7 +187,7 @@ def get_random_accelerator(videocodec: VideoCodec):
         Returns:
             accelerator (Accelerator): 转码能力.
     """
-    # 
+    #
     capability = read_capability()
     capability = json.loads(capability)
 
@@ -193,11 +196,12 @@ def get_random_accelerator(videocodec: VideoCodec):
     if config == 'software':
         config = Accelerator.software
     elif config == 'nvidia':
-        config =  Accelerator.nvidia
+        config = Accelerator.nvidia
     elif config == 'intel':
-        config =  Accelerator.intel
+        config = Accelerator.intel
     print(config)
     return config
+
 
 def create_task_from_db(contractid):
     helper = MySQLHelper()
@@ -220,7 +224,7 @@ def create_task_from_db(contractid):
         videocodec = VideoCodec.H265
     else:
         videocodec = "undefined"
-    
+
     if result[0][11] == "ultra":
         bitrate = Bitrate.ULTRA
     elif result[0][11] == "high":
@@ -248,7 +252,8 @@ def create_task_from_db(contractid):
     else:
         audiocodec = "undefined"
 
-    video = Video(result[0][1], result[0][2], resolution, videocodec, result[0][5], result[0][6], result[0][7], audiocodec)
+    video = Video(result[0][1], result[0][2], resolution, videocodec,
+                  result[0][5], result[0][6], result[0][7], audiocodec)
     task = Task(resolution, videocodec, bitrate, mode)
     videotask = VideoTask(video, task, result[0][0])
     return videotask
@@ -261,7 +266,5 @@ def create_task_from_db(contractid):
 #         Returns:
 #             video_tasks (list): 视频任务列表.
 #     """
-
-
 
     # return float(rate.strip()), float(length.strip())/1000

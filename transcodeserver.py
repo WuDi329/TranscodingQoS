@@ -37,8 +37,9 @@ def build_videotask(request: transcoding_pb2.DispatchVoDRequest):
     elif request.videoinfo.originresolution == 2:
         resolution = Resolution.FHD
     else:
-        raise ValueError(f"Unsupported resolution: {request.videoinfo.originresolution}")
-    
+        raise ValueError(
+            f"Unsupported resolution: {request.videoinfo.originresolution}")
+
     videocodec = ""
     if request.videoinfo.origincodec == 0:
         videocodec = VideoCodec.H264
@@ -46,14 +47,15 @@ def build_videotask(request: transcoding_pb2.DispatchVoDRequest):
         videocodec = VideoCodec.H265
     else:
         raise ValueError(f"Unsupported codec: {request.videoinfo.origincodec}")
-    
+
     audiocodec = ""
     if request.videoinfo.originaudiocodec == 0:
         audiocodec = AudioCodec.AAC
     elif request.videoinfo.originaudiocodec == 1:
         audiocodec = AudioCodec.NONE
     else:
-        raise ValueError(f"Unsupported audiocodec: {request.videoinfo.originaudiocodec}")
+        raise ValueError(
+            f"Unsupported audiocodec: {request.videoinfo.originaudiocodec}")
 
     outputresolution = ""
     if request.videoinfo.originresolution == 0:
@@ -72,7 +74,7 @@ def build_videotask(request: transcoding_pb2.DispatchVoDRequest):
         outputcodec = VideoCodec.H265
     else:
         raise ValueError(f"Unsupported codec: {request.outputcodec}")
-    
+
     bitrate = ""
     if request.bitrate == 0:
         bitrate = Bitrate.LOW
@@ -84,7 +86,7 @@ def build_videotask(request: transcoding_pb2.DispatchVoDRequest):
         bitrate = Bitrate.ULTRA
     else:
         raise ValueError(f"Unsupported bitrate: {request.bitrate}")
-    
+
     mode = ""
     if request.tasktype == 0:
         mode = Mode.Normal
@@ -95,8 +97,7 @@ def build_videotask(request: transcoding_pb2.DispatchVoDRequest):
     else:
         raise ValueError(f"Unsupported mode: {request.tasktype}")
 
-    
-    video = Video(request.originurl, request.outputurl, resolution, videocodec, request.videoinfo.originbitrate, 
+    video = Video(request.originurl, request.outputurl, resolution, videocodec, request.videoinfo.originbitrate,
                   request.videoinfo.originframerate, request.videoinfo.duration, audiocodec)
     task = Task(outputresolution, outputcodec, bitrate, mode)
     return VideoTask(video, task, request.taskid)
@@ -115,29 +116,31 @@ def worker(request: transcoding_pb2.DispatchVoDRequest):
 
 class Transcoder(transcoding_pb2_grpc.TranscoderServicer):
 
-    async def DispatchVoDTask(self, 
-                              request: transcoding_pb2.DispatchVoDRequest, 
+    async def DispatchVoDTask(self,
+                              request: transcoding_pb2.DispatchVoDRequest,
                               context: grpc.aio.ServicerContext
-    ) -> transcoding_pb2.DispatchVoDReply:
+                              ) -> transcoding_pb2.DispatchVoDReply:
         logger.info(f"Received DispatchVodTask {request.taskid}")
         logger.info(f"{request}")
         # 这里将具体的任务请求加入到队列中
         queue_list.append(request)
         logger.info(f"Add {request.taskid} to queue.")
-        
+
         # 创建新的进程处理任务
         future = executor.submit(worker, request)
         try:
             result = future.result()
             logger.success('Task completed successfully, result:', result)
         except Exception as e:
-            logger.error(f'Task failed with exception:{e}\n{traceback.format_exc()}')
+            logger.error(
+                f'Task failed with exception:{e}\n{traceback.format_exc()}')
         return transcoding_pb2.DispatchVoDReply(taskid=request.taskid)
 
 # async def FinishTask(self, request, context):
 #     logger.info("Finished task.")
 #     print(request)
 #     return transcoding_pb2.FinishVoDReply()
+
 
 async def serve() -> None:
     server = grpc.aio.server()
@@ -149,12 +152,11 @@ async def serve() -> None:
 
     async def server_graceful_exit() -> None:
         await server.stop(3)
-    
+
     _cleanup_coroutines.append(server_graceful_exit)
     await server.wait_for_termination()
 
-    
-    
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     try:
@@ -162,4 +164,3 @@ if __name__ == "__main__":
     finally:
         loop.run_until_complete(asyncio.gather(*_cleanup_coroutines))
         loop.close()
-

@@ -8,9 +8,10 @@ import subprocess
 import json
 import os
 
+
 async def upload(video_path: str, task: Task):
     """
-        
+
 
         Args:
             video_path (str): 视频的路径.
@@ -18,11 +19,12 @@ async def upload(video_path: str, task: Task):
 
     """
     video = read_video_info(video_path)
-    print(video.framerate)
+    # print(video.framerate)
     videotask = generate_videotask(video, task)
     # 这里修改了代码逻辑，将具体的代码执行和生成任务分开
     # execute_transcode(videotask)
     await dispatch_task(videotask)
+
 
 def extract_video_message(video_info: dict, video_path: str):
     """
@@ -41,7 +43,8 @@ def extract_video_message(video_info: dict, video_path: str):
     bitrate = video_info["streams"][0]["bit_rate"]
     framerate = video_info["streams"][0]["r_frame_rate"]
     duration = video_info["streams"][0]["duration"]
-    audio_codec=video_info['streams'][1]['codec_name'] if len(video_info['streams']) > 1 else 'none'
+    audio_codec = video_info['streams'][1]['codec_name'] if len(
+        video_info['streams']) > 1 else 'none'
 
     print(width)
     print(height)
@@ -58,14 +61,14 @@ def extract_video_message(video_info: dict, video_path: str):
         resolution = "undefined"
 
     print(resolution)
-    
+
     # 暂时只考虑hevc和h264
     video_codec = VideoCodec.H264 if video_codec == "h264" else VideoCodec.H265
     # 暂时只考虑aac和none
     audio_codec = AudioCodec.NONE if audio_codec == "none" else AudioCodec.AAC
 
-
-    video = Video(video_path, outputpath, resolution, video_codec, bitrate, framerate, duration, audio_codec)
+    video = Video(video_path, outputpath, resolution, video_codec,
+                  bitrate, framerate, duration, audio_codec)
 
     # 这里同样缺少video实例化的过程
     helper = MySQLHelper()
@@ -74,6 +77,7 @@ def extract_video_message(video_info: dict, video_path: str):
     print("Inserted video record with ID: ", video.vid)
     helper.disconnect()
     return video
+
 
 def read_video_info(video_path: str):
     """
@@ -87,7 +91,8 @@ def read_video_info(video_path: str):
             length (float): 视频的长度.
     """
     current_path = os.path.abspath(__file__)
-    cmd = "ffprobe -loglevel error -print_format json -show_streams {} > test.json".format(video_path, os.path.join(current_path, "test.json"))
+    cmd = "ffprobe -loglevel error -print_format json -show_streams {} > test.json".format(
+        video_path, os.path.join(current_path, "test.json"))
     print("当前执行读取视频信息指令：{}".format(cmd))
     # 这里修了个一个小bug，之前是异步执行，提交任务时准确性存疑
     subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
@@ -98,6 +103,7 @@ def read_video_info(video_path: str):
     f.close()
 
     return extract_video_message(video_info, video_path)
+
 
 def generate_videotask(video: Video, task: Task):
     # 这里缺少数据库实例化的过程

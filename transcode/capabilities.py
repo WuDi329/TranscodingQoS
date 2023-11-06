@@ -31,12 +31,10 @@ def get_nvenc_capability():
     else:
         h264 = {"h264": ["software"]}
 
-
-    
     if "hevc_nvenc" in capabilities:
-        hevc = {"hevc": ["software", "nvidia"]}
+        hevc = {"h265": ["software", "nvidia"]}
     else:
-        hevc = {"hevc": ["software"]}
+        hevc = {"h265": ["software"]}
 
 
     # 合并字典
