@@ -44,21 +44,34 @@ enum AudioCodec {
   NONE = 1;
 };
 
-enum Bitrate {
+enum Resolution {
   SD = 0;
   HD = 1;
   FHD = 2;
 };
 
+enum Bitrate {
+  LOW = 0;
+  MEDIUM = 1;
+  HIGH = 2;
+  ULTRA = 3;  
+}
+
 message VideoInfo {
     string vid = 1;
     string duration = 2;
     VideoCodec origincodec = 3;
-    string originresolution = 4;
-    AudioCodec Originaudiocodec = 5;
+    Resolution originresolution = 4;
+    AudioCodec originaudiocodec = 5;
     string originframerate = 6;
     string originbitrate = 7;
 }
+
+enum TaskType {
+  VOD = 0;
+  LATENCY = 1;
+  LIVE = 2;
+};
 
 message DispatchVoDRequest {
     string taskid = 1;
@@ -66,10 +79,12 @@ message DispatchVoDRequest {
     string originurl = 3;
     string outputurl = 4;
     VideoCodec outputcodec = 5;
-    string outputresolution = 6;
+    Resolution outputresolution = 6;
     AudioCodec outputaudiocodec = 7;
     string outputframerate = 8;
     Bitrate bitrate = 9;
+    TaskType tasktype = 10;
+    string uniqueid = 11;
 }
 
 message DispatchVoDReply {
